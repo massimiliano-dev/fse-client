@@ -27,9 +27,9 @@ export interface SaxonSchematronOptions {
   /** Name used in messages, e.g. `schematron_RSA_v8.3`. */
   schematronName: string;
   /**
-   * The schematron compiled to an XSLT and then to a SaxonJS SEF (JSON), for example with SchXslt and
-   * `xslt3 -xsl:compiled.xsl -export:rsa.sef.json -nogo`. TODO(verify): compile pipeline for the FSE
-   * schematrons and the `xslt3` licence for build-time use.
+   * The schematron compiled to an XSLT with SchXslt 1.10.1 (`2.0/pipeline-for-svrl.xsl`) and then to a
+   * SaxonJS SEF (JSON) with `xslt3 -export -nogo`: run `pnpm compile:schematron [name]`, which writes
+   * `vendor/schematron-sef/<name>.sef.json`. Tested with the official `schematronFSE_LAB_v27.1.sch`.
    */
   sef: string;
   /** Maximum document size in bytes. Default 10 MiB. */
@@ -38,9 +38,9 @@ export interface SaxonSchematronOptions {
   loadSaxon?: () => Promise<SaxonJsLike>;
 }
 
-async function importSaxon(): Promise<SaxonJsLike> {
+/** Loads the optional peer dependency `saxon-js`. Exported for tests only. */
+export async function importSaxon(specifier = 'saxon-js'): Promise<SaxonJsLike> {
   // Variable specifier: saxon-js is an optional peer dependency and must not be resolved at build time.
-  const specifier = 'saxon-js';
   try {
     const mod = (await import(/* @vite-ignore */ specifier)) as { default?: SaxonJsLike } & SaxonJsLike;
     return mod.default ?? mod;
@@ -54,7 +54,10 @@ async function importSaxon(): Promise<SaxonJsLike> {
  * peer dependency `saxon-js` (proprietary Saxonica licence, see README). The document goes through the
  * same input hardening as the XSD validator first.
  *
- * Status: implemented but not yet tested against the FSE schematrons. TODO(verify).
+ * Tested with the official LAB schematron (`schematronFSE_LAB_v27.1.sch`, it-fse-catalogs pinned commit):
+ * a synthetic laboratory report passes, a broken one reports the expected `ERRORE-n`. Other schematrons
+ * use the same features (`let`, `value-of`, `name`, embedded `xsl:value-of`/`xsl:for-each`) but are not
+ * covered by tests yet. TODO(verify) for those.
  */
 export class SaxonSchematronValidator implements SchematronValidator {
   readonly schematronName: string;
@@ -67,7 +70,7 @@ export class SaxonSchematronValidator implements SchematronValidator {
     this.schematronName = options.schematronName;
     this.#sef = options.sef;
     this.#maxInputBytes = options.maxInputBytes ?? DEFAULT_MAX_XML_BYTES;
-    this.#loadSaxon = options.loadSaxon ?? importSaxon;
+    this.#loadSaxon = options.loadSaxon ?? (() => importSaxon());
   }
 
   async validate(xml: string | Uint8Array): Promise<CdaValidationResult> {

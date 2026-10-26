@@ -17,7 +17,8 @@
     "check:secrets": "node scripts/check-secrets.mjs",
     "sync:catalogs": "node packages/validator/scripts/sync-catalogs.ts",
     "changeset": "changeset",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "compile:schematron": "node packages/validator/scripts/compile-schematron.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

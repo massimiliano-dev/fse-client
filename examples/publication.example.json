@@ -1,0 +1,13 @@
+{
+  "identificativoDoc": "2.16.840.1.113883.2.9.2.999.4.4^SYNTHETIC-DOC-1",
+  "identificativoRep": "2.16.840.1.113883.2.9.2.999.4.5.1",
+  "identificativoSottomissione": "2.16.840.1.113883.2.9.2.999.4.3.1",
+  "tipologiaStruttura": "Ospedale",
+  "tipoDocumentoLivAlto": "REF",
+  "assettoOrganizzativo": "AD_PSC001",
+  "tipoAttivitaClinica": "CON",
+  "dataInizioPrestazione": "20260101100000",
+  "dataFinePrestazione": "20260101103000",
+  "attiCliniciRegoleAccesso": ["P99"],
+  "administrativeRequest": ["SSN"]
+}

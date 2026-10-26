@@ -1,7 +1,7 @@
 {
   "name": "@massimiliano-dev/fse-gateway-client",
   "version": "0.0.0",
-  "description": "Unofficial typed client for the Italian FSE 2.0 gateway (Fascicolo Sanitario Elettronico): mTLS, JWT signing, CDA validation.",
+  "description": "Unofficial typed client for the Italian FSE 2.0 gateway (Fascicolo Sanitario Elettronico): mTLS, JWT signing, validation, publication, replacement, deletion, metadata update and transaction status.",
   "license": "MIT",
   "author": "Massimiliano Polce",
   "type": "module",

@@ -36,8 +36,10 @@ const BEARER = /\b(Bearer)\s+[A-Za-z0-9._~+/=-]+/gi;
  * masked either, which is harmless.
  */
 const OMO = '[0-9LMNPQRSTUV]';
+// The trailing boundary only excludes digits, so a fiscal code followed by stray letters (a typo quoted
+// back by a schematron message, e.g. `ERRORE-46| codice fiscale 'XXXXXX00X00X000Xx'`) is still masked.
 const CODICE_FISCALE = new RegExp(
-  `(?<![A-Za-z0-9])[A-Z]{6}${OMO}{2}[ABCDEHLMPRST]${OMO}{2}[A-Z]${OMO}{3}[A-Z](?![A-Za-z0-9])`,
+  `(?<![A-Za-z0-9])[A-Z]{6}${OMO}{2}[ABCDEHLMPRST]${OMO}{2}[A-Z]${OMO}{3}[A-Z](?![0-9])`,
   'gi',
 );
 

@@ -14,6 +14,8 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['packages/*/test/**/*.test.ts'],
+          // Blocks every connection to a non-loopback host: unit tests can never reach a real gateway.
+          setupFiles: ['./test/no-network.ts'],
           exclude: ['**/*.gateway.test.ts', '**/node_modules/**'],
           environment: 'node',
         },

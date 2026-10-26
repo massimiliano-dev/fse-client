@@ -141,6 +141,21 @@ function hasEmbeddedFiles(doc: PDFDocument): boolean {
   return (names?.size() ?? 0) > 0 || (kids?.size() ?? 0) > 0;
 }
 
+/**
+ * True if the PDF has a signature field or `SigFlags` set (it does not verify the signature). Used to warn
+ * before publishing a PDF that is not PAdES-signed (guide §2: "iniettato in PDF firmato digitalmente in
+ * modalità PADES").
+ */
+export async function isPdfSigned(pdf: Uint8Array): Promise<boolean> {
+  let doc: PDFDocument;
+  try {
+    doc = await PDFDocument.load(pdf, { updateMetadata: false });
+  } catch {
+    throw new FsePdfError('The input is not a readable PDF');
+  }
+  return isSigned(doc);
+}
+
 function isSigned(doc: PDFDocument): boolean {
   const acroForm = doc.catalog.lookupMaybe(PDFName.of('AcroForm'), PDFDict);
   if (!acroForm) return false;

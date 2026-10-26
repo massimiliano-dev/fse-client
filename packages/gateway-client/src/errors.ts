@@ -37,6 +37,15 @@ export class FseGatewayError extends FseError {
     return this.problem?.traceID;
   }
 
+  /**
+   * True for answers that may succeed if repeated later: 429 Too Many Requests, 502, 503, 504 (guide
+   * Tabelle 7/17/22/27/32/47). Never retry automatically a publication that may have been taken in charge:
+   * check the transaction status first.
+   */
+  get retryable(): boolean {
+    return this.status === 429 || this.status === 502 || this.status === 503 || this.status === 504;
+  }
+
   override toJSON(): Record<string, unknown> {
     return { ...super.toJSON(), status: this.status, operation: this.operation, problem: this.problem };
   }
@@ -75,6 +84,13 @@ export class FseValidationError extends FseGatewayError {
 
 /** Authentication or authorisation failed (HTTP 401/403): bad or expired JWT, certificate not enabled. */
 export class FseAuthError extends FseGatewayError {}
+
+/**
+ * HTTP 404: the document (`idDoc`) or the transaction (`workflowInstanceId` / `traceId`) is unknown to the
+ * gateway (`/msg/record-not-found`, guide §15.1.1 and §13.2.5; validate-and-replace: "se il documento che si
+ * intende sostituire non è presente su INI", §11.2).
+ */
+export class FseNotFoundError extends FseGatewayError {}
 
 /** No usable HTTP response: DNS, TCP, TLS handshake (including certificate verification), timeouts. */
 export class FseTransportError extends FseGatewayError {}

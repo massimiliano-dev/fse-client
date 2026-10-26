@@ -43,7 +43,15 @@ const providers: Provider[] = [
  * })
  *
  * constructor(@Inject(FSE_GATEWAY_CLIENT) private readonly fse: FseGatewayClient) {}
+ *
+ * // validate → (PAdES signature) → publish → status, all on the same singleton client:
+ * const { workflowInstanceId } = await this.fse.validate({ pdf, requestBody: { activity: 'VALIDATION' }, context });
+ * await this.fse.publish({ pdf: signedPdf, requestBody: { ...metadata, workflowInstanceId }, context });
+ * const outcome = await this.fse.waitForStatus(workflowInstanceId!, { subject: context.subject });
  * ```
+ *
+ * The client is stateless per request (fresh JWTs for every call, no per-user state), so one singleton is
+ * safe to share: request-scoped providers are not needed.
  */
 @Module({})
 export class FseModule implements OnApplicationShutdown {

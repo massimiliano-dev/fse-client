@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { SYNTHETIC_FISCAL_CODE } from '@massimiliano-dev/fse-fixtures';
 import { runCli } from '../src/index.js';
-import { captureIo, makeWorkspace } from './helpers.js';
+import { captureIo, fakeGateway, makeWorkspace } from './helpers.js';
 
 let ws: Awaited<ReturnType<typeof makeWorkspace>>;
 
@@ -14,11 +14,10 @@ const args = ['send', 'cda.xml', 'document.pdf', '--env', 'pre', '--no-local-val
 
 describe('fse send', () => {
   it('--dry-run builds the request and prints only a redacted summary', async () => {
-    const io = captureIo(ws.dir, ws.env);
+    const io = captureIo(ws.dir, ws.env, fakeGateway().factory);
     expect(await runCli([...args, '--dry-run'], io)).toBe(0);
     const summary = JSON.parse(io.out) as {
       dryRun: boolean;
-      tls: string;
       request: {
         url: string;
         multipart: { requestBody: unknown; file: { size: number; sha256: string } };
@@ -26,7 +25,6 @@ describe('fse send', () => {
       };
     };
     expect(summary.dryRun).toBe(true);
-    expect(summary.tls).toMatch(/loaded and matching/);
     expect(summary.request.url).toBe(
       'https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1/documents/validation',
     );
@@ -53,18 +51,21 @@ describe('fse send', () => {
     expect(io.err).toBe('');
   });
 
-  it('does not send for real yet', async () => {
-    const io = captureIo(ws.dir, ws.env);
-    expect(await runCli(args, io)).toBe(2);
-    expect(io.err).toMatch(/not implemented yet/);
+  it('sends through the gateway client and prints the result', async () => {
+    const gateway = fakeGateway({ validate: { httpStatus: 200, traceID: 'trace-1', warning: 'w' } });
+    const io = captureIo(ws.dir, ws.env, gateway.factory);
+    expect(await runCli(args, io)).toBe(0);
+    expect(io.out).toMatch(/^VALID \(gateway, HTTP 200, VERIFICA\)/);
+    expect(io.out).toContain('traceID: trace-1');
+    expect(gateway.calls.map((c) => c.method)).toEqual(['validate']);
   });
 
   it('reads credentials only from environment variables, never from flags', async () => {
-    const io = captureIo(ws.dir, {});
+    const io = captureIo(ws.dir, {}, fakeGateway().factory);
     expect(await runCli([...args, '--dry-run'], io)).toBe(2);
     expect(io.err).toMatch(/FSE_CONTEXT_FILE|FSE_SIGN_CERT_FILE/);
 
-    const withFlag = captureIo(ws.dir, ws.env);
+    const withFlag = captureIo(ws.dir, ws.env, fakeGateway().factory);
     expect(await runCli([...args, '--dry-run', '--key', 'sign-key.pem'], withFlag)).toBe(2);
     expect(withFlag.err).toMatch(/unknown option '--key'/);
   });
@@ -73,7 +74,7 @@ describe('fse send', () => {
     const { chmod } = await import('node:fs/promises');
     const { join } = await import('node:path');
     await chmod(join(ws.dir, 'sign-key.pem'), 0o644);
-    const io = captureIo(ws.dir, ws.env);
+    const io = captureIo(ws.dir, ws.env, fakeGateway().factory);
     expect(await runCli([...args, '--dry-run'], io)).toBe(0);
     expect(io.err).toMatch(/chmod 600/);
     await chmod(join(ws.dir, 'sign-key.pem'), 0o600);

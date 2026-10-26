@@ -31,6 +31,10 @@ describe('redact', () => {
     expect(redact(`'${CF.toLowerCase()}' is not valid`)).toBe(`'${REDACTED_CF}' is not valid`);
   });
 
+  it('masks a codice fiscale followed by stray letters (typos quoted by schematron messages)', () => {
+    expect(redact(`codice fiscale '${CF}x' cittadino`)).toBe(`codice fiscale '${REDACTED_CF}x' cittadino`);
+  });
+
   it('masks codici fiscali with omocodia substitutions', () => {
     expect(redact(OMOCODIC_CF)).toBe(REDACTED_CF);
   });

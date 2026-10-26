@@ -39,7 +39,7 @@ jobs:
       - run: pnpm build
 
   official-xsd:
-    name: Validate the synthetic CDA against the official XSD (pinned it-fse-catalogs)
+    name: Validate the synthetic CDAs against the official XSD and LAB schematron (pinned it-fse-catalogs)
     runs-on: ubuntu-latest
     needs: check
     steps:
@@ -53,7 +53,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm sync:catalogs
-      - run: pnpm vitest run --project unit packages/validator/test/catalogs.test.ts
+      - run: pnpm compile:schematron
+      - run: pnpm vitest run --project unit packages/validator/test/catalogs.test.ts packages/validator/test/schematron-lab.test.ts
 
   # Smoke test against the real FSE gateway, PRE environment, synthetic data only. Skipped unless the
   # repository variable FSE_GATEWAY_ENV is set to "pre". Never runs for pull requests (their code must

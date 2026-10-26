@@ -1,8 +1,14 @@
-import { createPublicKey, createVerify, X509Certificate } from 'node:crypto';
+import { X509Certificate } from 'node:crypto';
 import { makeTestPdf } from '@massimiliano-dev/fse-fixtures';
 import { describe, expect, it } from 'vitest';
-import { createFseTokens, FseConfigError, RsaPemJwtSigner, sha256Hex } from '../src/index.js';
-import { application, context, decodeSegment, testCertificates } from './helpers.js';
+import {
+  createFseAuthToken,
+  createFseTokens,
+  FseConfigError,
+  RsaPemJwtSigner,
+  sha256Hex,
+} from '../src/index.js';
+import { application, context, decodeSegment, testCertificates, verifyRs256 } from './helpers.js';
 
 const AUD = 'https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1';
 
@@ -12,16 +18,6 @@ function signer() {
     certificatePem: signature.certificatePem,
     privateKeyPem: signature.privateKeyPem,
   });
-}
-
-function verifyRs256(token: string, certificatePem: string): boolean {
-  const [h, p, s] = token.split('.');
-  const verifier = createVerify('RSA-SHA256');
-  verifier.update(`${h}.${p}`);
-  return verifier.verify(
-    createPublicKey(new X509Certificate(certificatePem).publicKey.export({ type: 'spki', format: 'pem' })),
-    Buffer.from(s ?? '', 'base64url'),
-  );
 }
 
 describe('createFseTokens', () => {
@@ -138,5 +134,77 @@ describe('createFseTokens', () => {
         defaultPurposeOfUse: 'TREATMENT',
       }),
     ).rejects.toThrow(/locality/);
+  });
+});
+
+describe('createFseAuthToken', () => {
+  it('builds only the Bearer token (status services)', async () => {
+    const now = new Date('2026-10-26T10:00:00Z');
+    const { signature } = testCertificates();
+    const token = await createFseAuthToken({
+      signer: signer(),
+      audience: AUD,
+      subject: context.subject,
+      now: () => now,
+    });
+    const iat = Math.floor(now.getTime() / 1000);
+    expect(decodeSegment(token.authorization, 1)).toEqual({
+      iss: 'auth:SYNTHETIC-SIGN-CN',
+      sub: context.subject,
+      aud: AUD,
+      iat,
+      exp: iat + 300,
+      jti: expect.stringMatching(/^[0-9a-f-]{36}$/),
+    });
+    expect(verifyRs256(token.authorization, signature.certificatePem)).toBe(true);
+    await expect(
+      createFseAuthToken({ signer: signer(), audience: AUD, subject: ' ' }),
+    ).rejects.toBeInstanceOf(FseConfigError);
+  });
+});
+
+describe('createFseTokens per-operation rules', () => {
+  const base = {
+    audience: AUD,
+    application,
+    context,
+    actionId: 'UPDATE' as const,
+    defaultPurposeOfUse: 'SYSADMIN' as const,
+  };
+
+  it('applies fixed claims and the allowed purposes', async () => {
+    const tokens = await createFseTokens({
+      ...base,
+      signer: signer(),
+      allowedPurposesOfUse: ['SYSADMIN'],
+      fixedClaims: { subjectRole: 'NOR', locality: '------' },
+    });
+    expect(tokens.signatureClaims).toMatchObject({
+      subject_role: 'NOR',
+      locality: '------',
+      purpose_of_use: 'SYSADMIN',
+    });
+    await expect(
+      createFseTokens({
+        ...base,
+        signer: signer(),
+        context: { ...context, purposeOfUse: 'UPDATE' },
+        allowedPurposesOfUse: ['SYSADMIN'],
+      }),
+    ).rejects.toThrow(/not allowed/);
+  });
+
+  it('requires resource_hl7_type unless the operation makes it optional', async () => {
+    const { resourceHl7Type: _r, ...noType } = context;
+    await expect(createFseTokens({ ...base, signer: signer(), context: noType })).rejects.toThrow(
+      /resourceHl7Type/,
+    );
+    const tokens = await createFseTokens({
+      ...base,
+      signer: signer(),
+      context: noType,
+      resourceHl7Type: 'optional',
+    });
+    expect(tokens.signatureClaims).not.toHaveProperty('resource_hl7_type');
   });
 });

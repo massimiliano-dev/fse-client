@@ -1,7 +1,7 @@
 {
   "name": "@massimiliano-dev/fse-pdf",
   "version": "0.0.0",
-  "description": "Inject a CDA2 document into a PDF as the cda.xml attachment expected by the FSE 2.0 gateway, plus a PAdES signing hook.",
+  "description": "Inject a CDA2 document into a PDF as the cda.xml attachment expected by the FSE 2.0 gateway, and sign it in PAdES baseline B-B.",
   "license": "MIT",
   "author": "Massimiliano Polce",
   "type": "module",
@@ -53,6 +53,9 @@
   },
   "dependencies": {
     "@massimiliano-dev/fse-core": "workspace:^",
+    "@signpdf/placeholder-pdf-lib": "~3.3.0",
+    "@signpdf/signpdf": "~3.3.0",
+    "@signpdf/utils": "~3.3.0",
     "pdf-lib": "^1.17.1"
   },
   "devDependencies": {

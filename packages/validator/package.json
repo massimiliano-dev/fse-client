@@ -56,7 +56,9 @@
     "xmllint-wasm": "^5.3.0"
   },
   "devDependencies": {
-    "@massimiliano-dev/fse-fixtures": "workspace:*"
+    "@massimiliano-dev/fse-fixtures": "workspace:*",
+    "saxon-js": "2.7.0",
+    "xslt3": "2.7.0"
   },
   "peerDependencies": {
     "saxon-js": "^2.7.0"

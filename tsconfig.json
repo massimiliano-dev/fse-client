@@ -4,5 +4,12 @@
     "noEmit": true,
     "customConditions": ["@massimiliano-dev/source"]
   },
-  "include": ["packages/*/src", "packages/*/test", "packages/*/scripts", "fixtures/src", "vitest.config.ts"]
+  "include": [
+    "packages/*/src",
+    "packages/*/test",
+    "packages/*/scripts",
+    "fixtures/src",
+    "test",
+    "vitest.config.ts"
+  ]
 }

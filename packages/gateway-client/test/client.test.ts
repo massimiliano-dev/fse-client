@@ -9,7 +9,6 @@ import {
   FseGatewayError,
   FseTransportError,
   FseValidationError,
-  NotImplementedError,
   RsaPemJwtSigner,
   summarizePreparedRequest,
 } from '../src/index.js';
@@ -181,7 +180,8 @@ describe('FseGatewayClient.validate', () => {
     expect(summary).not.toMatch(/eyJ[\w-]+\./);
     expect(summary).not.toContain(SYNTHETIC_FISCAL_CODE);
     expect(summary).toContain('"action_id":"CREATE"');
-    expect(summary).toContain(prepared.file.sha256);
+    expect(prepared.body.kind).toBe('multipart');
+    if (prepared.body.kind === 'multipart') expect(summary).toContain(prepared.body.file.sha256);
   });
 });
 
@@ -206,13 +206,5 @@ describe('FseGatewayClient configuration', () => {
       expect(inspect(client, { depth: 20, showHidden: true })).not.toContain(line);
       expect(JSON.stringify(client)).not.toContain(line);
     }
-  });
-
-  it('exposes typed stubs for the publication services', async () => {
-    const client = newClient();
-    await expect(client.publish({} as never)).rejects.toBeInstanceOf(NotImplementedError);
-    await expect(client.replace({} as never)).rejects.toBeInstanceOf(NotImplementedError);
-    await expect(client.delete({} as never)).rejects.toBeInstanceOf(NotImplementedError);
-    await expect(client.updateMetadata({} as never)).rejects.toBeInstanceOf(NotImplementedError);
   });
 });

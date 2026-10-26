@@ -16,3 +16,14 @@ export const SYNTHETIC_CDA_PATH = new URL('../cda/synthetic-minimal.xml', import
 export function readSyntheticCda(): string {
   return readFileSync(SYNTHETIC_CDA_PATH, 'utf8');
 }
+
+/** Absolute path of the synthetic laboratory report (LOINC 11502-2). */
+export const SYNTHETIC_LAB_CDA_PATH = new URL('../cda/synthetic-lab.xml', import.meta.url);
+
+/**
+ * Reads the synthetic laboratory report: an original, fake document that passes the official XSD and the
+ * official schematron `schematronFSE_LAB_v27.1.sch` (see `fixtures/README.md`).
+ */
+export function readSyntheticLabCda(): string {
+  return readFileSync(SYNTHETIC_LAB_CDA_PATH, 'utf8');
+}

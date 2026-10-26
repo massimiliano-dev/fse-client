@@ -1,3 +1,4 @@
+import { createVerify, X509Certificate } from 'node:crypto';
 import {
   createTestCertificate,
   SYNTHETIC_PERSON_ID,
@@ -38,4 +39,12 @@ export const application: FseApplicationInfo = {
 export function decodeSegment(token: string, index: 0 | 1): Record<string, unknown> {
   const part = token.split('.')[index];
   return JSON.parse(Buffer.from(part ?? '', 'base64url').toString('utf8')) as Record<string, unknown>;
+}
+
+/** Verifies an RS256 compact JWS with the public key of a PEM certificate. */
+export function verifyRs256(token: string, certificatePem: string): boolean {
+  const [h, p, s] = token.split('.');
+  const verifier = createVerify('RSA-SHA256');
+  verifier.update(`${h}.${p}`);
+  return verifier.verify(new X509Certificate(certificatePem).publicKey, Buffer.from(s ?? '', 'base64url'));
 }

@@ -17,24 +17,51 @@ validation, CDA injection into PDF, signed JWTs over mutual TLS, a NestJS module
 
 ## Status
 
-Early scaffold (0.x). The MVP is: **local XSD validation + gateway validation call + CLI**.
+0.x, not yet used in production. Everything below is tested with mocks; the gateway operations were also
+run against the Ministry's own local gateway ([it-fse-gtw-test-container](https://github.com/ministero-salute/it-fse-gtw-test-container),
+lite version), never against PRE or PROD from this repository.
 
-| Feature                                                         | Package              | Status                                                    |
-| --------------------------------------------------------------- | -------------------- | --------------------------------------------------------- |
-| Redaction of tokens, keys, fiscal codes, CDA bodies             | `fse-core`           | ✅ implemented, tested                                    |
-| Hardened XML input (no DOCTYPE/XXE, UTF-8 only, 10 MiB limit)   | `fse-core`           | ✅ implemented, tested                                    |
-| Local XSD validation (official it-fse-catalogs, pinned commit)  | `fse-validator`      | ✅ implemented, tested                                    |
-| Local Schematron validation (SaxonJS, optional peer dependency) | `fse-validator`      | 🟡 implemented, **untested** with FSE schematrons         |
-| CDA injection into PDF as `cda.xml` attachment                  | `fse-pdf`            | ✅ implemented, tested                                    |
-| PAdES signature of the PDF                                      | `fse-pdf`            | 🔌 interface only (`PadesSigner`, HSM/remote hook)        |
-| JWT pair (`Authorization` + `FSE-JWT-Signature`), RS256         | `fse-gateway-client` | ✅ implemented, tested                                    |
-| mTLS transport, mandatory server verification                   | `fse-gateway-client` | ✅ implemented, tested on loopback                        |
-| Gateway validation `POST /documents/validation`                 | `fse-gateway-client` | ✅ implemented, tested with mocks; 🟡 not yet against PRE |
-| Publication, replace, delete, metadata update                   | `fse-gateway-client` | ⛔ typed stubs (`NotImplementedError`)                    |
-| Transaction status (`/status/...`)                              | `fse-gateway-client` | ⛔ not started                                            |
-| NestJS module (`FseModule.forRootAsync`)                        | `fse-nestjs`         | ✅ implemented, tested                                    |
-| `fse validate <file.xml>`                                       | `fse-cli`            | ✅ implemented, tested                                    |
-| `fse send --dry-run`                                            | `fse-cli`            | ✅ implemented, tested (real send: ⛔ stub)               |
+| Feature                                                                                      | Package              | Status                                                                    |
+| -------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------- |
+| Redaction of tokens, keys, fiscal codes, CDA bodies                                          | `fse-core`           | ✅ implemented, tested                                                    |
+| Hardened XML input (no DOCTYPE/XXE, UTF-8 only, 10 MiB limit)                                | `fse-core`           | ✅ implemented, tested                                                    |
+| Local XSD validation (official it-fse-catalogs, pinned commit)                               | `fse-validator`      | ✅ implemented, tested                                                    |
+| Local Schematron validation (SaxonJS, optional peer dependency)                              | `fse-validator`      | ✅ tested with the official LAB schematron; 🟡 other schematrons untested |
+| CDA injection into PDF as `cda.xml` attachment                                               | `fse-pdf`            | ✅ implemented, tested                                                    |
+| PAdES baseline B-B signature (PEM, PKCS#12, or HSM/remote via a hook)                        | `fse-pdf`            | ✅ implemented, verified with OpenSSL; 🟡 required level TODO(verify)     |
+| JWT pair (`Authorization` + `FSE-JWT-Signature`), per-operation claims                       | `fse-gateway-client` | ✅ implemented, tested                                                    |
+| mTLS transport, mandatory server verification                                                | `fse-gateway-client` | ✅ implemented, tested on loopback                                        |
+| Validation `POST /documents/validation`                                                      | `fse-gateway-client` | ✅ mocks + test container                                                 |
+| Publication `POST /documents`                                                                | `fse-gateway-client` | ✅ mocks + test container                                                 |
+| Validate-and-create `POST /documents/validate-and-create`                                    | `fse-gateway-client` | ✅ mocks + test container                                                 |
+| Replace `PUT /documents/{idDoc}`, `PUT /documents/validate-and-replace/{idDoc}`              | `fse-gateway-client` | ✅ mocks; container reached (no INI there)                                |
+| Delete `DELETE /documents/{idDoc}`                                                           | `fse-gateway-client` | ✅ mocks; container reached (no INI there)                                |
+| Metadata `PUT /documents/{idDoc}/metadata`, `/metadata-iti-57`                               | `fse-gateway-client` | ✅ mocks; container reached (no INI there)                                |
+| Metadata "oscuramento a catena" `PUT /documents/{idDoc}/metadata-oscuramento-catena`         | `fse-gateway-client` | ✅ mocks (PRE only, regional nodes, guide §9)                             |
+| Status `GET /status/{workflowInstanceId}`, `GET /status/search/{traceId}`, `waitForStatus()` | `fse-gateway-client` | ✅ mocks + test container (by trace id); 🟡 see TODO(verify) below        |
+| FHIR endpoints (`/fhir-documents`, `/fhir-documents/{idDoc}`, `/documents/fhir-validation`)  | —                    | ⛔ not exposed: request not fully specified (see below)                   |
+| Health check `GET /status`                                                                   | —                    | ⛔ out of scope                                                           |
+| NestJS module (`FseModule.forRootAsync`), all operations on the injected client              | `fse-nestjs`         | ✅ implemented, tested                                                    |
+| CLI: `validate [--gateway]`, `publish`, `replace`, `delete`, `metadata`, `status [--wait]`   | `fse-cli`            | ✅ implemented, tested with an injected fake client                       |
+
+**Not exposed: FHIR endpoints.** `POST /fhir-documents` and `PUT /fhir-documents/{idDoc}` exist only in the
+OpenAPI, with the same CDA request DTOs as `/documents` (`healthDataFormat` can only be `CDA`), and are not
+described anywhere in the integration guide. `POST /documents/fhir-validation` is described in guide §4, but
+it is "Disponibile in Produzione: No" (Tabella 4), `mode` is optional in Tabella 11 and required in the
+OpenAPI (`ValidationFHIRReqDTO`), the curl examples of §4.1.1/§4.1.2 point to `/documents/validation`, and
+the JWT claims for a FHIR bundle (e.g. what `attachment_hash` and `resource_hl7_type` cover) are not
+specified. They will be added when the sources are consistent.
+
+**Open points (TODO(verify)).** `grep -rn "TODO(verify)" packages` lists them with the source passage. The main
+ones: `administrativeRequest` is required in guide Tabelle 16/26/31/36/41 but optional in the OpenAPI and §16.2;
+`workflowInstanceId` is "Obbligatorio" for publication in §16.2 but optional in Tabella 16 and the OpenAPI (the
+CLI requires it); the publication example headings say "OK 200" while the status tables say 202 (both
+accepted); the claims of validate-and-create/replace are inferred from creation/replacement; the PAdES level
+checked by the gateway is not documented; the current dispatcher code (it-fse-gtw-dispatcher, seen in the
+test container) authorises `GET /status/{workflowInstanceId}` by comparing the 3 characters after `#` in the
+Bearer `sub` with those of the event issuer (`integrity:<signature CN>`, e.g. `S1#110…`), whereas guide
+Tabella 54 says `sub` is the operator fiscal code: `getStatus()` takes `subject` as a parameter for this
+reason.
 
 ## Packages
 
@@ -70,19 +97,24 @@ How a producer system talks to the gateway, according to it-fse-support
 [`doc/integrazione-gateway/README.md`](https://github.com/ministero-salute/it-fse-support/tree/main/doc/integrazione-gateway)
 and the root [README](https://github.com/ministero-salute/it-fse-support#richiesta-certificati-x509).
 
-| #   | Step                                                                                                | Here                                    |
-| --- | --------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| 1   | Generate **two** RSA keys and CSRs: one for **authentication** (mTLS), one for **signature** (JWTs) | manual, see below                       |
-| 2   | Obtain the certificates from Sogei (test certificates for PRE first)                                | manual                                  |
-| 3   | Store keys and certificates in a secret manager / HSM                                               | your infrastructure                     |
-| 4   | Produce the CDA2 document                                                                           | your application                        |
-| 5   | Validate locally: XSD, then schematron                                                              | ✅ XSD / 🟡 schematron                  |
-| 6   | Inject the CDA into the PDF as `cda.xml` ("modalità ATTACHMENT")                                    | ✅ `injectCda()`                        |
-| 7   | Sign the PDF in PAdES                                                                               | 🔌 `PadesSigner` (bring your own)       |
-| 8   | Build the two JWTs (fresh per request, `attachment_hash` = SHA-256 of the PDF)                      | ✅ `createFseTokens()`                  |
-| 9   | Call `POST /v1/documents/validation` over mTLS (`VERIFICA` or `VALIDATION`)                         | ✅ `client.validate()`, CLI `--dry-run` |
-| 10  | Publish with the returned `workflowInstanceId` (`POST /v1/documents`)                               | ⛔ stub                                 |
-| 11  | Check the transaction status                                                                        | ⛔ not started                          |
+| #   | Step                                                                                                | Here                                             |
+| --- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 1   | Generate **two** RSA keys and CSRs: one for **authentication** (mTLS), one for **signature** (JWTs) | manual, see below                                |
+| 2   | Obtain the certificates from Sogei (test certificates for PRE first)                                | manual                                           |
+| 3   | Store keys and certificates in a secret manager / HSM                                               | your infrastructure                              |
+| 4   | Produce the CDA2 document                                                                           | your application                                 |
+| 5   | Validate locally: XSD, then schematron                                                              | ✅ `XsdValidator`, `SaxonSchematronValidator`    |
+| 6   | Inject the CDA into the PDF as `cda.xml` ("modalità ATTACHMENT")                                    | ✅ `injectCda()`                                 |
+| 7   | Validate on the gateway with activity `VALIDATION` (before signing, FAQ) → `workflowInstanceId`     | ✅ `client.validate()`, `fse validate --gateway` |
+| 8   | Sign the PDF in PAdES                                                                               | ✅ `P12PadesSigner` / `RawSignaturePadesSigner`  |
+| 9   | Publish with the `workflowInstanceId` (`POST /v1/documents`): 202 = taken in charge                 | ✅ `client.publish()`, `fse publish`             |
+| 10  | Follow the asynchronous delivery to INI/EDS (`/v1/status/...`)                                      | ✅ `client.waitForStatus()`, `fse status --wait` |
+| 11  | Later: replace, update metadata or delete with the document OID (`idDoc`)                           | ✅ `replace()`, `updateMetadata()`, `delete()`   |
+
+Fresh JWTs are signed for every call (step 7, 9, 10, 11). The gateway checks that the CDA published is the
+one validated (hash of the CDA, ignoring the legal authenticator signature, guide §2), so signing the PDF
+after the validation is expected; the test container even warns `SIGN_WARN - Attenzione il documento
+risulta firmato in validazione` when a signed PDF is validated.
 
 ### 1. Keys and CSRs
 
@@ -99,19 +131,16 @@ through `FSE_*_KEY_PASSPHRASE` from a secret manager. The official README descri
 (during the trial: `fse_support@sogei.it`; later the provisioning service). TODO(verify): the current
 procedure and the CSR subject fields required by Sogei.
 
-### 2–9 in code
+### 4–11 in code
 
 ```ts
 import { readFile } from 'node:fs/promises';
 import { FseGatewayClient, RsaPemJwtSigner, FseValidationError } from '@massimiliano-dev/fse-gateway-client';
 import { createFseXsdValidator } from '@massimiliano-dev/fse-validator';
-import { injectCda } from '@massimiliano-dev/fse-pdf';
+import { injectCda, P12PadesSigner } from '@massimiliano-dev/fse-pdf';
 
 const validator = await createFseXsdValidator('vendor/it-fse-catalogs');
-const local = await validator.validate(cdaXml);
-if (!local.valid) throw new Error('CDA not valid');
-
-const pdf = await padesSigner.sign(await injectCda(basePdf, cdaXml)); // inject first, then sign
+if (!(await validator.validate(cdaXml)).valid) throw new Error('CDA not valid');
 
 const client = new FseGatewayClient({
   environment: 'pre',
@@ -123,22 +152,50 @@ const client = new FseGatewayClient({
   application: { id: 'MYAPP', vendor: 'MY VENDOR', version: '1.0.0' }, // registered at accreditation
 });
 
+const context = {
+  subject: operatorCx, // operator fiscal code, IHE CX format
+  subjectRole: 'AAS',
+  subjectOrganizationId: '190',
+  subjectOrganization: 'Regione Sicilia',
+  locality: facilityXon, // XON format, checked by the gateway for create/replace/update/delete
+  personId: patientCx,
+  patientConsent: true,
+  resourceHl7Type: "('11502-2^^2.16.840.1.113883.6.1')",
+} as const;
+
 try {
-  const result = await client.validate({
+  // 7. validation before signing (mode ATTACHMENT and healthDataFormat CDA are the defaults)
+  const pdf = await injectCda(basePdf, cdaXml);
+  const { workflowInstanceId } = await client.validate({
     pdf,
-    requestBody: { activity: 'VERIFICA' }, // mode ATTACHMENT and healthDataFormat CDA are the defaults
-    context: {
-      subject: operatorCx, // operator fiscal code, IHE CX format
-      subjectRole: 'AAS',
-      subjectOrganizationId: '190',
-      subjectOrganization: 'Regione Sicilia',
-      locality: facilityXon, // XON format
-      personId: patientCx,
-      patientConsent: true,
-      resourceHl7Type: "('11488-4^^2.16.840.1.113883.6.1')",
+    requestBody: { activity: 'VALIDATION' },
+    context,
+  });
+
+  // 8. PAdES baseline B-B (or RawSignaturePadesSigner with your HSM / remote signing service)
+  const pades = await P12PadesSigner.fromPkcs12({ pkcs12: await secrets.get('author.p12'), passphrase });
+  const signedPdf = await pades.sign(pdf);
+
+  // 9. publication: 202 = taken in charge, delivery to INI/EDS is asynchronous
+  const published = await client.publish({
+    pdf: signedPdf,
+    context,
+    requestBody: {
+      workflowInstanceId,
+      identificativoDoc: '2.16.840.1.113883.2.9.2.190.4.4^DOC123',
+      identificativoRep: '2.16.840.1.113883.2.9.2.190.4.5.1',
+      identificativoSottomissione: '2.16.840.1.113883.2.9.2.190.4.3.1',
+      tipologiaStruttura: 'Ospedale',
+      tipoDocumentoLivAlto: 'REF', // must match resource_hl7_type (guide §16.4), checked locally
+      assettoOrganizzativo: 'AD_PSC001',
+      tipoAttivitaClinica: 'CON',
+      administrativeRequest: ['SSN'],
     },
   });
-  console.log(result.workflowInstanceId, result.warning);
+
+  // 10. bounded polling: 10 attempts, 2 s doubling up to 30 s; never infinite
+  const status = await client.waitForStatus(published.workflowInstanceId!, { subject: context.subject });
+  console.log(status.outcome); // 'success' | 'failure' | 'pending'
 } catch (error) {
   if (error instanceof FseValidationError) console.error(error.errors); // redacted RFC 7807 problems
   throw error;
@@ -147,24 +204,90 @@ try {
 }
 ```
 
-To sign JWTs with an HSM or a cloud KMS, implement `FseJwtSigner` (`certificateCommonName` + `sign(claims)`)
-instead of using `RsaPemJwtSigner`.
+Every request body is checked against the OpenAPI before anything is signed (unknown fields, enums,
+`maxLength`, IHE DTM dates, the classCode/typeCode table of guide §16.4), path parameters are restricted to
+printable ASCII without `/ \ ? # %` and percent-encoded, and `purpose_of_use` overrides are limited to the
+values the guide allows for each operation:
 
-### CLI: `fse send --dry-run`
+| Operation                               | Endpoint                                                       | `action_id`                              | `purpose_of_use`                                     | `attachment_hash` | `resource_hl7_type` |
+| --------------------------------------- | -------------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------- | ----------------- | ------------------- |
+| `validate`                              | `POST /documents/validation`                                   | CREATE                                   | TREATMENT                                            | yes               | required            |
+| `publish`                               | `POST /documents`                                              | CREATE                                   | TREATMENT                                            | yes               | required            |
+| `validateAndCreate`                     | `POST /documents/validate-and-create`                          | CREATE                                   | TREATMENT                                            | yes               | required            |
+| `replace`                               | `PUT /documents/{idDoc}`                                       | UPDATE                                   | UPDATE                                               | yes               | required            |
+| `validateAndReplace`                    | `PUT /documents/validate-and-replace/{idDoc}`                  | UPDATE                                   | UPDATE                                               | yes               | required            |
+| `delete`                                | `DELETE /documents/{idDoc}`                                    | DELETE                                   | UPDATE                                               | no                | optional            |
+| `updateMetadata`, `updateMetadataIti57` | `PUT /documents/{idDoc}/metadata`, `/metadata-iti-57`          | UPDATE                                   | UPDATE or ACCESS UPDATE                              | no                | required            |
+| `updateMetadataOscuramentoCatena`       | `PUT /documents/{idDoc}/metadata-oscuramento-catena`           | UPDATE                                   | SYSADMIN (+ `subject_role` NOR, `locality` `------`) | no                | optional            |
+| `getStatus`, `getStatusByTraceId`       | `GET /status/{workflowInstanceId}`, `/status/search/{traceId}` | Bearer token only (guide Tabelle 46, 51) |                                                      |                   |                     |
+
+Sources: guide §16.1 Tabella 55, §16.3.6 Tabella 47, §16.3.12 Tabella 62, §9. Results never contain the FHIR
+bundle unless you pass `includeFhirBundle: true` (it is health data). Status events are redacted (fiscal codes,
+SOAP payloads).
+
+To sign JWTs with an HSM or a cloud KMS, implement `FseJwtSigner` (`certificateCommonName` + `sign(claims)`)
+instead of using `RsaPemJwtSigner`; for the PDF, give `RawSignaturePadesSigner` a `signRsaSha256(data)`
+function backed by your HSM or remote signing service.
+
+### PAdES
+
+`P12PadesSigner` produces a PAdES baseline B-B signature (ETSI EN 319 142-1): `/SubFilter /ETSI.CAdES.detached`,
+detached CMS with content-type, message-digest and **signing-certificate-v2**, no signing-time attribute (the
+time is in `/M`), SHA-256 with RSA. This is the same attribute set as the Ministry's reference tool
+(it-fse-gtw-tools `pdf-generator`, `CreateSignatureBasePades`). The PDF placeholder and byte ranges are done
+by [`@signpdf`](https://github.com/vbuch/node-signpdf) (MIT); its own `P12Signer` is not used because it
+produces an `adbe.pkcs7.detached`-style CMS (with signing-time, without signing-certificate-v2), which is not
+PAdES baseline (and `@signpdf/signer-p12` needs `node-forge`, which has an unpatched advisory,
+GHSA-86w9-cpqp-85rv). PKCS#12 files are read by a small built-in reader on `node:crypto` (integrity MAC
+checked; PBES2/AES as written by OpenSSL 3 by default). Legacy RC2/3DES files (`openssl pkcs12 -legacy`,
+older Windows exports) are refused: re-export them with
+`openssl pkcs12 -export -keypbe AES-256-CBC -certpbe AES-256-CBC -macalg sha256`, or use PEM. The accreditation only checks "la corretta apposizione della firma PADES", not
+qualified certificates (it-fse-support `doc/accreditamento`). No timestamp (B-T) or revocation data (B-LT).
+
+### CLI
 
 ```sh
 export FSE_SIGN_CERT_FILE=/run/secrets/fse-sign.crt FSE_SIGN_KEY_FILE=/run/secrets/fse-sign.key
 export FSE_TLS_CERT_FILE=/run/secrets/fse-auth.crt  FSE_TLS_KEY_FILE=/run/secrets/fse-auth.key
-export FSE_CONTEXT_FILE=./context.json            # see examples/context.example.json
-fse send cda.xml document.pdf --env pre --dry-run
+export FSE_CONTEXT_FILE=./context.json              # see examples/context.example.json
+
+# 7. local XSD + gateway validation (CDA injected into the PDF); prints the workflowInstanceId
+fse validate fixtures/cda/synthetic-lab.xml --gateway --pdf base.pdf --activity VALIDATION --env pre
+
+# 9. publication of the signed PDF (patient and document type are read from the embedded cda.xml)
+fse publish signed.pdf --metadata examples/publication.example.json \
+  --workflow-instance-id '2.16.840.1.113883.2.9.2.999.4.4.abc^^^^urn:ihe:iti:xdw:2013:workflowInstanceId' --env pre
+
+# 10. status, once or with bounded polling
+fse status '2.16.840.1.113883.2.9.2.999.4.4.abc^^^^urn:ihe:iti:xdw:2013:workflowInstanceId' --env pre --wait
+fse status --trace 3f67b89ba72ed40b --env pre --json
+
+# 11. replace, metadata update, delete (operations without a CDA read the patient from a file)
+fse replace '2.16.840.1.113883.2.9.2.999.4.4^DOC1' signed-v2.pdf --metadata examples/publication.example.json --env pre
+fse metadata '2.16.840.1.113883.2.9.2.999.4.4^DOC1' --metadata examples/metadata.example.json \
+  --patient examples/patient.example.json --env pre [--endpoint iti-57|oscuramento-catena]
+fse delete '2.16.840.1.113883.2.9.2.999.4.4^DOC1' --patient examples/patient.example.json --env pre
+
+# any of the above with --dry-run: signs the tokens and prints a redacted summary, sends nothing
 ```
 
-It validates the CDA locally, injects it into the PDF, reads the patient and document type from the CDA
-header, signs the two JWTs and prints a summary in which tokens and personal claims are replaced by
-`[REDACTED]`. Nothing is sent: real sending from the CLI is not implemented yet.
+- **Credentials only from environment variables pointing to files**, never from flags (flags end up in shell
+  history and in `ps` output). The CLI warns when a key file is readable by group or others.
+- **Patient data never on the command line**: `person_id` and `resource_hl7_type` come from the CDA (inside the
+  PDF) or from a `--patient` JSON file.
+- **Production** (`--env prod`) is refused unless `--confirm-production` is also given, and always prints a
+  warning that real patient data must only come from an accredited system. `oscuramento-catena` is refused in
+  production (not available there, guide Tabella 4).
+- `--json` gives machine-readable output on stdout; errors go to stderr, redacted.
+- `fse send <cda.xml> <pdf>` still works, as an alias of `fse validate <cda.xml> --gateway --pdf <pdf>`.
 
-**Credentials are read only from environment variables pointing to files**, never from flags (flags end up
-in shell history and in `ps` output). The CLI warns when a key file is readable by group or others.
+| Exit code | Meaning                                                                                                                     |
+| --------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 0         | success                                                                                                                     |
+| 1         | invalid: local validation failed, the gateway rejected the request (400/413/415/422), or `--wait` ended in `BLOCKING_ERROR` |
+| 2         | usage or configuration error (flags, credentials, invalid request body, production not confirmed)                           |
+| 3         | gateway or network error (401/403, 404, 409, 429, 5xx, TLS, timeout)                                                        |
+| 4         | `status --wait`: still pending when the attempts ran out                                                                    |
 
 | Variable                                    | Content                                         |
 | ------------------------------------------- | ----------------------------------------------- |
@@ -174,6 +297,8 @@ in shell history and in `ps` output). The CLI warns when a key file is readable 
 | `FSE_TLS_KEY_PASSPHRASE`, `FSE_TLS_CA_FILE` | key passphrase, extra CA for the gateway server |
 | `FSE_CONTEXT_FILE`                          | operator/organisation context (JSON)            |
 | `FSE_CATALOGS_DIR`                          | it-fse-catalogs checkout (not a secret)         |
+
+The CLI does not sign PDFs: sign them with your signing system, or with `P12PadesSigner` from code.
 
 ### NestJS
 
@@ -221,6 +346,22 @@ See [SECURITY.md](SECURITY.md) for the threat model. In short:
 
 ## Schematron and the SaxonJS licence
 
+Compile step (build machine only):
+
+```sh
+pnpm sync:catalogs                                  # official XSD + schematron, pinned commit, into vendor/
+pnpm compile:schematron                             # default: schematronFSE_LAB_v27.1; or pass other names
+# → vendor/schematron-sef/schematronFSE_LAB_v27.1.sef.json
+```
+
+`compile:schematron` downloads [SchXslt](https://doi.org/10.5281/zenodo.1495494) 1.10.1 (MIT) from Maven
+Central, checks its SHA-256, compiles `.sch` → XSLT (`2.0/pipeline-for-svrl.xsl`) → SEF with `xslt3`. At run
+time give the SEF to `new SaxonSchematronValidator({ schematronName, sef })` with `saxon-js` installed. Here
+`saxon-js` and `xslt3` are **devDependencies of `@massimiliano-dev/fse-validator` only** (for the compile step
+and the tests); for users `saxon-js` stays an optional peer dependency. Tested: the synthetic laboratory report
+`fixtures/cda/synthetic-lab.xml` passes the official LAB schematron, a copy without `realmCode` reports
+`ERRORE-1` and `ERRORE-2`, warnings (`W…|`) do not make a document invalid.
+
 The FSE schematrons use `queryBinding="xslt2"`, which needs an XSLT 2/3 processor. In JavaScript the only
 practical one is [SaxonJS](https://www.saxonica.com/saxonjs/). `npm view saxon-js license` says
 `SEE LICENSE IN LICENSE.txt`; the `LICENSE.txt` in `saxon-js@2.7.0` is the **SaxonJS License 1.0 (June 2020)**
@@ -241,12 +382,13 @@ licence covers `xslt3`, needed to compile schematron → XSLT → SEF.) This rep
 Types and constants cite their source in TSDoc. Facts that could not be confirmed are marked
 `TODO(verify)` in the code (`grep -rn "TODO(verify)" packages`).
 
-| Repository                                                                                 | Used for                                                                    | Commit read         |
-| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ------------------- |
-| [it-fse-support](https://github.com/ministero-salute/it-fse-support)                       | OpenAPI `openapi/gateway/swagger_gtw.yaml`, integration guide, environments | `cf7b7822`          |
-| [it-fse-catalogs](https://github.com/ministero-salute/it-fse-catalogs)                     | XSD and schematron (`pnpm sync:catalogs`)                                   | `d8c766a6` (pinned) |
-| [it-fse-gtw-tools](https://github.com/ministero-salute/it-fse-gtw-tools)                   | JWT claims and signing, `cda.xml` injection (reference Java tools)          | `6967f3ab`          |
-| [it-fse-gtw-test-container](https://github.com/ministero-salute/it-fse-gtw-test-container) | local gateway containers and request examples                               | `d9e763a3`          |
+| Repository                                                                                 | Used for                                                                            | Commit read         |
+| ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | ------------------- |
+| [it-fse-support](https://github.com/ministero-salute/it-fse-support)                       | OpenAPI `openapi/gateway/swagger_gtw.yaml`, integration guide, environments         | `cf7b7822`          |
+| [it-fse-catalogs](https://github.com/ministero-salute/it-fse-catalogs)                     | XSD and schematron (`pnpm sync:catalogs`)                                           | `d8c766a6` (pinned) |
+| [it-fse-gtw-tools](https://github.com/ministero-salute/it-fse-gtw-tools)                   | JWT claims and signing, `cda.xml` injection (reference Java tools)                  | `6967f3ab`          |
+| [it-fse-gtw-test-container](https://github.com/ministero-salute/it-fse-gtw-test-container) | local gateway containers and request examples (client run against the lite version) | `d9e763a3`          |
+| [SchXslt](https://doi.org/10.5281/zenodo.1495494) 1.10.1 (Maven Central, SHA-256 pinned)   | schematron → XSLT compiler for `pnpm compile:schematron`                            | `1.10.1`            |
 
 Environments: PRE `https://modipa-val.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1`, PROD
 `https://modipa.fse.salute.gov.it/govway/rest/in/FSE/gateway/v1`.

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SYNTHETIC laboratory report (Referto di Laboratorio, LOINC 11502-2) written for the fse-client tests.
+  Every person, organisation, code value and result is fake. The fiscal codes are invalid on purpose
+  ("X" is not a month letter). Built to pass the official schematron schematronFSE_LAB_v27.1.sch.
+-->
+<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sdtc="urn:hl7-org:sdtc">
+  <realmCode code="IT"/>
+  <typeId root="2.16.840.1.113883.1.3" extension="POCD_MT000040UV02"/>
+  <templateId root="2.16.840.1.113883.2.9.10.1.1" extension="1.3"/>
+  <id root="2.16.840.1.113883.2.9.2.999.4.4" extension="SYNTHETIC.LAB.0001" assigningAuthorityName="Regione Sintetica"/>
+  <code code="11502-2" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Referto di laboratorio"/>
+  <title>Referto di laboratorio (sintetico)</title>
+  <effectiveTime value="20260101100000+0100"/>
+  <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" codeSystemName="HL7 Confidentiality" displayName="Normal"/>
+  <languageCode code="it-IT"/>
+  <setId root="2.16.840.1.113883.2.9.2.999.4.4" extension="SYNTHETIC.LAB.0001" assigningAuthorityName="Regione Sintetica"/>
+  <versionNumber value="1"/>
+  <recordTarget>
+    <patientRole>
+      <id root="2.16.840.1.113883.2.9.4.3.2" extension="PROVAX00X00X000Y" assigningAuthorityName="MEF"/>
+      <patient>
+        <name>
+          <family>Sintetico</family>
+          <given>Paziente</given>
+        </name>
+        <administrativeGenderCode code="M" codeSystem="2.16.840.1.113883.5.1" codeSystemName="HL7 AdministrativeGender" displayName="Maschio"/>
+        <birthTime value="19800101"/>
+      </patient>
+    </patientRole>
+  </recordTarget>
+  <author>
+    <time value="20260101100000+0100"/>
+    <assignedAuthor>
+      <id root="2.16.840.1.113883.2.9.4.3.2" extension="OPERAT00X00X000Z" assigningAuthorityName="MEF"/>
+      <telecom use="WP" value="mailto:laboratorio@example.invalid"/>
+      <assignedPerson>
+        <name>
+          <family>Operatore</family>
+          <given>Sintetico</given>
+        </name>
+      </assignedPerson>
+    </assignedAuthor>
+  </author>
+  <custodian>
+    <assignedCustodian>
+      <representedCustodianOrganization>
+        <id root="2.16.840.1.113883.2.9.4.1.3" extension="999999999999" assigningAuthorityName="Ministero della Salute"/>
+        <name>Struttura Sintetica</name>
+      </representedCustodianOrganization>
+    </assignedCustodian>
+  </custodian>
+  <legalAuthenticator>
+    <time value="20260101100000+0100"/>
+    <signatureCode code="S"/>
+    <assignedEntity>
+      <id root="2.16.840.1.113883.2.9.4.3.2" extension="OPERAT00X00X000Z" assigningAuthorityName="MEF"/>
+      <assignedPerson>
+        <name>
+          <family>Operatore</family>
+          <given>Sintetico</given>
+        </name>
+      </assignedPerson>
+    </assignedEntity>
+  </legalAuthenticator>
+  <inFulfillmentOf>
+    <order classCode="ACT" moodCode="RQO">
+      <id root="2.16.840.1.113883.2.9.2.999.4.9" extension="SYNTHETIC.ORDER.0001"/>
+    </order>
+  </inFulfillmentOf>
+  <component>
+    <structuredBody>
+      <component>
+        <section>
+          <code code="18719-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="CHIMICA"/>
+          <title>Chimica clinica</title>
+          <text>
+            <table>
+              <tbody>
+                <tr><td>Glucosio</td><td>90 mg/dL</td></tr>
+              </tbody>
+            </table>
+          </text>
+          <entry typeCode="DRIV">
+            <act classCode="ACT" moodCode="EVN">
+              <code code="18719-5" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="CHIMICA"/>
+              <statusCode code="completed"/>
+              <entryRelationship typeCode="COMP">
+                <organizer classCode="BATTERY" moodCode="EVN">
+                  <code code="2345-7" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Glucosio"/>
+                  <statusCode code="completed"/>
+                  <component>
+                    <observation classCode="OBS" moodCode="EVN">
+                      <code code="2345-7" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Glucosio"/>
+                      <statusCode code="completed"/>
+                      <effectiveTime value="20260101090000+0100"/>
+                      <value xsi:type="PQ" value="90" unit="mg/dL"/>
+                    </observation>
+                  </component>
+                </organizer>
+              </entryRelationship>
+            </act>
+          </entry>
+        </section>
+      </component>
+    </structuredBody>
+  </component>
+</ClinicalDocument>

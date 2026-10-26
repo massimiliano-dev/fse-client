@@ -1,6 +1,8 @@
 export {
   readSyntheticCda,
+  readSyntheticLabCda,
   SYNTHETIC_CDA_PATH,
+  SYNTHETIC_LAB_CDA_PATH,
   SYNTHETIC_FISCAL_CODE,
   SYNTHETIC_PERSON_ID,
 } from './synthetic-cda.js';

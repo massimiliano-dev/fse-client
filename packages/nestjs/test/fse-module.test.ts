@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Inject, Injectable, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { FseGatewayClient, RsaPemJwtSigner } from '@massimiliano-dev/fse-gateway-client';
+import { FseConfigError, FseGatewayClient, RsaPemJwtSigner } from '@massimiliano-dev/fse-gateway-client';
 import { XsdValidator, type CdaValidator } from '@massimiliano-dev/fse-validator';
 import { createTestCertificate, TEST_XML_VALID, TEST_XSD } from '@massimiliano-dev/fse-fixtures';
 import { describe, expect, it, vi } from 'vitest';
@@ -66,6 +66,28 @@ describe('FseModule', () => {
     const service = moduleRef.get(DocumentsService);
     expect(service.gateway).toBe(client);
     expect(service.validator).toBe(validator);
+
+    // Every gateway operation is available on the injected client (no request-scoped providers needed).
+    for (const method of [
+      'validate',
+      'publish',
+      'validateAndCreate',
+      'replace',
+      'validateAndReplace',
+      'delete',
+      'updateMetadata',
+      'updateMetadataIti57',
+      'updateMetadataOscuramentoCatena',
+      'getStatus',
+      'getStatusByTraceId',
+      'waitForStatus',
+    ] as const) {
+      expect(typeof service.gateway[method]).toBe('function');
+    }
+    // Requests are validated locally before anything is signed or sent.
+    await expect(
+      service.gateway.delete({ documentId: '../status', context: {} as never }),
+    ).rejects.toBeInstanceOf(FseConfigError);
 
     const close = vi.spyOn(client, 'close');
     await moduleRef.close();
