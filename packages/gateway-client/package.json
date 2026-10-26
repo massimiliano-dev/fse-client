@@ -1,0 +1,63 @@
+{
+  "name": "@massimiliano-dev/fse-gateway-client",
+  "version": "0.0.0",
+  "description": "Unofficial typed client for the Italian FSE 2.0 gateway (Fascicolo Sanitario Elettronico): mTLS, JWT signing, CDA validation.",
+  "license": "MIT",
+  "author": "Massimiliano Polce",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/massimiliano-dev/fse-client.git",
+    "directory": "packages/gateway-client"
+  },
+  "homepage": "https://github.com/massimiliano-dev/fse-client#readme",
+  "bugs": "https://github.com/massimiliano-dev/fse-client/issues",
+  "keywords": [
+    "fse",
+    "fascicolo-sanitario-elettronico",
+    "fse-2.0",
+    "cda2",
+    "hl7",
+    "sanita",
+    "italy",
+    "ehr",
+    "gateway",
+    "jwt",
+    "mtls"
+  ],
+  "engines": {
+    "node": ">=22.19"
+  },
+  "exports": {
+    ".": {
+      "@massimiliano-dev/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@massimiliano-dev/fse-core": "workspace:^",
+    "undici": "^8.12.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@massimiliano-dev/fse-fixtures": "workspace:*",
+    "@massimiliano-dev/fse-pdf": "workspace:*"
+  }
+}

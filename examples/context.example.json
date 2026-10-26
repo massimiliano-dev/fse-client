@@ -1,0 +1,9 @@
+{
+  "subject": "XXXXXX00X00X000X^^^&2.16.840.1.113883.2.9.4.3.2&ISO",
+  "subjectRole": "AAS",
+  "subjectOrganizationId": "999",
+  "subjectOrganization": "Regione Sintetica",
+  "locality": "STRUTTURA SINTETICA^^^^^&2.16.840.1.113883.2.9.4.1.3&ISO^^^^999999999999",
+  "patientConsent": true,
+  "application": { "id": "MYAPP", "vendor": "MY VENDOR", "version": "1.0.0" }
+}

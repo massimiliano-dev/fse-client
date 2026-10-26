@@ -1,0 +1,24 @@
+# Keep the build context small and free of secrets and health data.
+**/node_modules
+**/dist
+vendor
+.git
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.crt
+**/*.cer
+**/*.der
+**/*.csr
+**/*.jks
+**/*.keystore
+**/secrets
+**/certs
+**/data
+**/real-data
+**/private
+**/out

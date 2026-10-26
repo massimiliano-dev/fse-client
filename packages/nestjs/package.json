@@ -1,0 +1,70 @@
+{
+  "name": "@massimiliano-dev/fse-nestjs",
+  "version": "0.0.0",
+  "description": "NestJS module for the unofficial FSE 2.0 gateway client and CDA validator.",
+  "license": "MIT",
+  "author": "Massimiliano Polce",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/massimiliano-dev/fse-client.git",
+    "directory": "packages/nestjs"
+  },
+  "homepage": "https://github.com/massimiliano-dev/fse-client#readme",
+  "bugs": "https://github.com/massimiliano-dev/fse-client/issues",
+  "keywords": [
+    "fse",
+    "fascicolo-sanitario-elettronico",
+    "fse-2.0",
+    "cda2",
+    "hl7",
+    "sanita",
+    "italy",
+    "ehr",
+    "nestjs"
+  ],
+  "engines": {
+    "node": ">=22.19"
+  },
+  "exports": {
+    ".": {
+      "@massimiliano-dev/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@massimiliano-dev/fse-gateway-client": "workspace:^",
+    "@massimiliano-dev/fse-validator": "workspace:^"
+  },
+  "devDependencies": {
+    "@massimiliano-dev/fse-fixtures": "workspace:*",
+    "@nestjs/common": "^12.2.0",
+    "@nestjs/core": "^12.2.0",
+    "@nestjs/testing": "^12.2.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^12.0.0",
+    "@nestjs/core": "^12.0.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.1.0"
+  }
+}

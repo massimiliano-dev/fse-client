@@ -1,0 +1,33 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store
+
+# Secrets: certificates, private keys, keystores, environment files.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*.csr
+*.jks
+*.keystore
+secrets/
+certs/
+
+# Downloaded official catalogs (pnpm sync:catalogs). Never committed.
+vendor/
+
+# Real documents and patient data must never enter the repository.
+data/
+real-data/
+private/
+*.real.xml
+*.real.pdf
+out/

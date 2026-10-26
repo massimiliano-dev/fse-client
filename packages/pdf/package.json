@@ -1,0 +1,61 @@
+{
+  "name": "@massimiliano-dev/fse-pdf",
+  "version": "0.0.0",
+  "description": "Inject a CDA2 document into a PDF as the cda.xml attachment expected by the FSE 2.0 gateway, plus a PAdES signing hook.",
+  "license": "MIT",
+  "author": "Massimiliano Polce",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/massimiliano-dev/fse-client.git",
+    "directory": "packages/pdf"
+  },
+  "homepage": "https://github.com/massimiliano-dev/fse-client#readme",
+  "bugs": "https://github.com/massimiliano-dev/fse-client/issues",
+  "keywords": [
+    "fse",
+    "fascicolo-sanitario-elettronico",
+    "fse-2.0",
+    "cda2",
+    "hl7",
+    "sanita",
+    "italy",
+    "ehr",
+    "pdf",
+    "pades",
+    "attachment"
+  ],
+  "engines": {
+    "node": ">=22.19"
+  },
+  "exports": {
+    ".": {
+      "@massimiliano-dev/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepublishOnly": "pnpm build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@massimiliano-dev/fse-core": "workspace:^",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@massimiliano-dev/fse-fixtures": "workspace:*"
+  }
+}
