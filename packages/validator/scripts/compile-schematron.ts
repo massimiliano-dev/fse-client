@@ -67,6 +67,12 @@ async function main(): Promise<void> {
   const out = join(vendor, 'schematron-sef');
   await mkdir(out, { recursive: true });
   const names = process.argv.slice(2).length > 0 ? process.argv.slice(2) : DEFAULT_SCHEMATRONS;
+  // Names become file paths under vendor/: plain file names only, no separators or "..".
+  for (const name of names) {
+    if (!/^[A-Za-z0-9_.-]+$/.test(name) || name.includes('..')) {
+      throw new Error(`Invalid schematron name: ${JSON.stringify(name)}`);
+    }
+  }
   for (const name of names) {
     if (!/^[\w.-]+$/.test(name)) throw new Error(`Invalid schematron name ${name}`);
     const sch = join(catalogs, 'schematron', `${name}.sch`);
