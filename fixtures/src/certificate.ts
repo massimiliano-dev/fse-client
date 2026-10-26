@@ -25,7 +25,9 @@ export function createTestCertificate(
   const sha256WithRsa = seq(oid([1, 2, 840, 113549, 1, 1, 11]), nul());
   const name = seq(set(seq(oid([2, 5, 4, 3]), utf8(commonName))));
   const serial = randomBytes(8);
-  serial[0] = (serial[0] ?? 0) & 0x7f; // positive INTEGER
+  // DER INTEGER must be positive and minimally encoded: a leading 0x00 followed by a byte < 0x80 is
+  // illegal padding and OpenSSL refuses the certificate. 0x40-0x7f as first byte avoids both cases.
+  serial[0] = ((serial[0] ?? 0) & 0x3f) | 0x40;
   const tbs = seq(
     tlv(0x02, serial),
     sha256WithRsa,
