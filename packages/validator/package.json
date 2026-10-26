@@ -1,6 +1,6 @@
 {
   "name": "@massimiliano-dev/fse-validator",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Local CDA2 validation for FSE 2.0: XSD (WebAssembly libxml2, no native build) and optional Schematron via SaxonJS.",
   "license": "MIT",
   "author": "Massimiliano Polce",
