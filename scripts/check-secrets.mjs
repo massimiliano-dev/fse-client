@@ -7,7 +7,7 @@
  * Dependency-free on purpose. A line can opt out with the marker "check-secrets: allow" (use it only for
  * documented, obviously fake values). Run with `pnpm check:secrets`; CI runs it on every push.
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { closeSync, fstatSync, openSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -51,8 +51,15 @@ function walk(dir) {
     const rel = relative(root, path);
     if (FORBIDDEN_FILE.test(entry.name)) findings.push(`${rel}: forbidden file type (keys/certificates)`);
     if (ENV_FILE.test(entry.name) && entry.name !== '.env.example') findings.push(`${rel}: .env file`);
-    if (statSync(path).size > 5 * 1024 * 1024) continue;
-    const buf = readFileSync(path);
+    // Stat and read through one descriptor, so the file cannot change between the two (TOCTOU).
+    let buf;
+    const fd = openSync(path, 'r');
+    try {
+      if (fstatSync(fd).size > 5 * 1024 * 1024) continue;
+      buf = readFileSync(fd);
+    } finally {
+      closeSync(fd);
+    }
     if (buf.includes(0)) continue; // binary
     const lines = buf.toString('utf8').split('\n');
     lines.forEach((line, i) => {

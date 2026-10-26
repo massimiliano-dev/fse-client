@@ -16,3 +16,9 @@ export {
   UnsafeXmlError,
   type UnsafeXmlReason,
 } from './errors.js';
+export {
+  readRegularFile,
+  FseFileError,
+  type ReadRegularFileOptions,
+  type ReadRegularFileResult,
+} from './read-file.js';

@@ -1,7 +1,10 @@
-import { lstat, readdir, readFile } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { FseError } from '@massimiliano-dev/fse-core';
+import { FseError, FseFileError, readRegularFile } from '@massimiliano-dev/fse-core';
 import { XsdValidator, type XsdSchemaSet, type XsdValidatorOptions } from './xsd.js';
+
+/** Upper bound for a single XSD file of the catalogs. The largest official one is well under 1 MiB. */
+const MAX_SCHEMA_FILE_BYTES = 5 * 1024 * 1024;
 
 /** Official repository of XSD, schematron and dictionaries used by the gateway. */
 export const FSE_CATALOGS_REPOSITORY = 'https://github.com/ministero-salute/it-fse-catalogs.git';
@@ -45,7 +48,11 @@ export async function loadFseCdaSchema(
   const variant = options.variant ?? 'POCD_MT000040UV02';
   let commit: string;
   try {
-    commit = (await readFile(join(catalogsDir, CATALOGS_COMMIT_MARKER), 'utf8')).trim();
+    commit = (
+      await readRegularFile(join(catalogsDir, CATALOGS_COMMIT_MARKER), { maxBytes: 1024, noFollow: true })
+    ).data
+      .toString('utf8')
+      .trim();
   } catch {
     throw new FseError(
       `No it-fse-catalogs checkout found in ${catalogsDir}. Run "pnpm sync:catalogs" or set the catalogs folder.`,
@@ -62,11 +69,18 @@ export async function loadFseCdaSchema(
   const names = (await readdir(dir)).filter((name) => /^[\w.-]+\.xsd$/.test(name)).sort();
   if (!names.includes('CDA.xsd')) throw new FseError(`CDA.xsd not found in ${dir}`);
 
+  // One descriptor per file (O_NOFOLLOW): no window between the "regular file, not a symlink" check and
+  // the read in which a schema could be swapped.
   const read = async (name: string) => {
     const path = join(dir, name);
-    const stat = await lstat(path);
-    if (!stat.isFile()) throw new FseError(`${path} is not a regular file`);
-    return readFile(path, 'utf8');
+    try {
+      return (await readRegularFile(path, { maxBytes: MAX_SCHEMA_FILE_BYTES, noFollow: true })).data.toString(
+        'utf8',
+      );
+    } catch (error) {
+      if (error instanceof FseFileError) throw new FseError(`${path}: ${error.reason}`);
+      throw error;
+    }
   };
   const entry = { fileName: 'CDA.xsd', contents: await read('CDA.xsd') };
   const includes = await Promise.all(
