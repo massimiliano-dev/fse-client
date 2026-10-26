@@ -1,6 +1,6 @@
 {
   "name": "@massimiliano-dev/fse-cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "`fse` command line: validate CDA2 documents locally and call the FSE 2.0 gateway (validate, publish, replace, delete, metadata, status).",
   "license": "MIT",
   "author": "Massimiliano Polce",
