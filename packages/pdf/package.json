@@ -1,6 +1,6 @@
 {
   "name": "@massimiliano-dev/fse-pdf",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Inject a CDA2 document into a PDF as the cda.xml attachment expected by the FSE 2.0 gateway, and sign it in PAdES baseline B-B.",
   "license": "MIT",
   "author": "Massimiliano Polce",

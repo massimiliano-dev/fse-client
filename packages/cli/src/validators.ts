@@ -26,7 +26,7 @@ export function maxXmlBytes(options: LocalValidationOptions): number {
 
 /**
  * `--schema <file.xsd>`: a single self-contained XSD. Otherwise the CDA2 XSD from the it-fse-catalogs
- * checkout in `--catalogs`, `FSE_CATALOGS_DIR` or `./vendor/it-fse-catalogs`.
+ * checkout in `--catalogs` or `FSE_CATALOGS_DIR`, or from the catalogs bundled in fse-validator.
  */
 export async function resolveXsdValidator(io: CliIo, options: LocalValidationOptions): Promise<CdaValidator> {
   const maxInputBytes = maxXmlBytes(options);
@@ -36,7 +36,8 @@ export async function resolveXsdValidator(io: CliIo, options: LocalValidationOpt
     );
     return new XsdValidator({ entry: { fileName: 'schema.xsd', contents }, includes: [] }, { maxInputBytes });
   }
-  const dir = resolve(io.cwd, options.catalogs ?? io.env.FSE_CATALOGS_DIR ?? 'vendor/it-fse-catalogs');
+  const catalogs = options.catalogs ?? io.env.FSE_CATALOGS_DIR;
+  const dir = catalogs === undefined ? undefined : resolve(io.cwd, catalogs);
   const variant = (options.variant ?? 'POCD_MT000040UV02') as FseCdaSchemaVariant;
   if (variant !== 'POCD_MT000040UV02' && variant !== 'POCD_HD000040') {
     throw new RangeError('--variant must be POCD_MT000040UV02 or POCD_HD000040');

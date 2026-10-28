@@ -1,6 +1,6 @@
 {
   "name": "@massimiliano-dev/fse-core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Shared security primitives for the unofficial FSE 2.0 client: redaction of tokens/fiscal codes/CDA bodies and hardened XML input checks.",
   "license": "MIT",
   "author": "Massimiliano Polce",

@@ -5,7 +5,9 @@ Thanks for helping. Issues and pull requests are welcome.
 1. `pnpm install`, then `pnpm test`. For tests against the official XSD run `pnpm sync:catalogs` first
    (downloads the pinned it-fse-catalogs commit into the gitignored `vendor/`); for the official LAB
    schematron also run `pnpm compile:schematron` (SchXslt from Maven Central, SHA-256 checked, compiled with
-   the `xslt3` devDependency into `vendor/schematron-sef/`). Without them those tests are skipped.
+   the `xslt3` devDependency into `vendor/schematron-sef/`). `pnpm build` then copies both into
+   `packages/validator/catalogs/` (gitignored, shipped in the npm package; `prepack` fails without it).
+   Without them those tests are skipped.
 2. **Never call the real gateways from tests.** Gateway tests use undici `MockAgent`; CLI tests inject a
    fake client (`fakeGateway()` in `packages/cli/test/helpers.ts`) and the default test IO refuses to
    create a real one. To exercise a real gateway implementation locally, use the Ministry's

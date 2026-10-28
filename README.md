@@ -82,10 +82,16 @@ compiled to WebAssembly ([xmllint-wasm](https://github.com/noppa/xmllint-wasm)).
 ```sh
 pnpm install
 pnpm sync:catalogs                      # downloads XSD + schematron at the pinned it-fse-catalogs commit into vendor/
-pnpm build
+pnpm compile:schematron                 # compiles the LAB schematron into vendor/schematron-sef/
+pnpm build                              # also bundles both into packages/validator/catalogs/
 node packages/cli/dist/bin.js validate fixtures/cda/synthetic-minimal.xml
 # VALID: fixtures/cda/synthetic-minimal.xml (0 issue(s))
 ```
+
+From npm nothing has to be downloaded: `@massimiliano-dev/fse-validator` bundles the XSD and schematron of
+it-fse-catalogs (pinned commit, with the LOINC and UCUM licence notices) and the compiled LAB schematron, and
+`createFseXsdValidator()` uses them when no folder is given. See the
+[validator README](packages/validator/README.md) for the list of files and the attribution.
 
 Exit codes: `0` valid, `1` invalid (or refused as unsafe XML), `2` usage or configuration error. Issue
 messages are redacted: libxml2 quotes invalid values, so values are replaced with `'[VALUE]'` and source
@@ -139,7 +145,7 @@ import { FseGatewayClient, RsaPemJwtSigner, FseValidationError } from '@massimil
 import { createFseXsdValidator } from '@massimiliano-dev/fse-validator';
 import { injectCda, P12PadesSigner } from '@massimiliano-dev/fse-pdf';
 
-const validator = await createFseXsdValidator('vendor/it-fse-catalogs');
+const validator = await createFseXsdValidator(); // bundled catalogs; or pass an it-fse-catalogs folder
 if (!(await validator.validate(cdaXml)).valid) throw new Error('CDA not valid');
 
 const client = new FseGatewayClient({
@@ -296,7 +302,7 @@ fse delete '2.16.840.1.113883.2.9.2.999.4.4^DOC1' --patient examples/patient.exa
 | `FSE_TLS_CERT_FILE`, `FSE_TLS_KEY_FILE`     | authentication (mTLS) certificate and key (PEM) |
 | `FSE_TLS_KEY_PASSPHRASE`, `FSE_TLS_CA_FILE` | key passphrase, extra CA for the gateway server |
 | `FSE_CONTEXT_FILE`                          | operator/organisation context (JSON)            |
-| `FSE_CATALOGS_DIR`                          | it-fse-catalogs checkout (not a secret)         |
+| `FSE_CATALOGS_DIR`                          | it-fse-catalogs checkout (default: bundled)     |
 
 The CLI does not sign PDFs: sign them with your signing system, or with `P12PadesSigner` from code.
 
@@ -309,7 +315,7 @@ The CLI does not sign PDFs: sign them with your signing system, or with `P12Pade
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
         gateway: { environment: 'pre', tls: …, signer: …, application: … },
-        validator: { catalogsDir: config.getOrThrow('FSE_CATALOGS_DIR') },
+        validator: {}, // bundled catalogs; or { catalogsDir: config.getOrThrow('FSE_CATALOGS_DIR') }
       }),
     }),
   ],
@@ -342,7 +348,8 @@ See [SECURITY.md](SECURITY.md) for the threat model. In short:
   the WebAssembly libxml2 expands external entities from its virtual file system even without `--noent`
   (there is a test documenting it). UTF-8 only, 10 MiB default limit, `--nonet`, no host file system.
 - **Supply chain.** SHA-pinned actions, Dependabot, CodeQL, `pnpm audit`, `pnpm check:secrets` in CI, npm
-  provenance. The official catalogs are fetched at a pinned commit and verified by git object id.
+  provenance. The official catalogs are fetched at a pinned commit and verified by git object id before they
+  are bundled into the validator package; `prepack` refuses to pack it without them.
 
 ## Schematron and the SaxonJS licence
 
@@ -385,7 +392,7 @@ Types and constants cite their source in TSDoc. Facts that could not be confirme
 | Repository                                                                                 | Used for                                                                            | Commit read         |
 | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | ------------------- |
 | [it-fse-support](https://github.com/ministero-salute/it-fse-support)                       | OpenAPI `openapi/gateway/swagger_gtw.yaml`, integration guide, environments         | `cf7b7822`          |
-| [it-fse-catalogs](https://github.com/ministero-salute/it-fse-catalogs)                     | XSD and schematron (`pnpm sync:catalogs`)                                           | `d8c766a6` (pinned) |
+| [it-fse-catalogs](https://github.com/ministero-salute/it-fse-catalogs)                     | XSD and schematron (`pnpm sync:catalogs`, bundled in `fse-validator`)               | `d8c766a6` (pinned) |
 | [it-fse-gtw-tools](https://github.com/ministero-salute/it-fse-gtw-tools)                   | JWT claims and signing, `cda.xml` injection (reference Java tools)                  | `6967f3ab`          |
 | [it-fse-gtw-test-container](https://github.com/ministero-salute/it-fse-gtw-test-container) | local gateway containers and request examples (client run against the lite version) | `d9e763a3`          |
 | [SchXslt](https://doi.org/10.5281/zenodo.1495494) 1.10.1 (Maven Central, SHA-256 pinned)   | schematron → XSLT compiler for `pnpm compile:schematron`                            | `1.10.1`            |
@@ -399,5 +406,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Synthetic data only.
 
 ## License
 
-[MIT](LICENSE) © Massimiliano Polce. The official catalogs downloaded into `vendor/` are not part of this
-project and keep their own terms.
+[MIT](LICENSE) © Massimiliano Polce. The official catalogs are not part of this project's code and keep their
+own terms: `@massimiliano-dev/fse-validator` redistributes, unmodified, files of the Ministero della Salute
+it-fse-catalogs repository with its LOINC and UCUM licence notices. LOINC® is a registered United States
+trademark of Regenstrief Institute, Inc.; LOINC material is used in accordance with its licence. Details in
+the [validator README](packages/validator/README.md#licence-and-attribution).

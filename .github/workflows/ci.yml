@@ -54,6 +54,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm sync:catalogs
       - run: pnpm compile:schematron
+      - run: pnpm --filter @massimiliano-dev/fse-validator... build
+      - run: cd packages/validator && npm pack --dry-run
       - run: pnpm vitest run --project unit packages/validator/test/catalogs.test.ts packages/validator/test/schematron-lab.test.ts
 
   # Smoke test against the real FSE gateway, PRE environment, synthetic data only. Skipped unless the

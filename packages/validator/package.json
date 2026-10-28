@@ -1,7 +1,7 @@
 {
   "name": "@massimiliano-dev/fse-validator",
-  "version": "0.0.0",
-  "description": "Local CDA2 validation for FSE 2.0: XSD (WebAssembly libxml2, no native build) and optional Schematron via SaxonJS.",
+  "version": "0.1.0",
+  "description": "Local CDA2 validation for FSE 2.0: XSD (WebAssembly libxml2, no native build) and optional Schematron via SaxonJS. Bundles, unmodified, the XSD and schematron files of the Ministero della Salute it-fse-catalogs repository (pinned commit) with its LOINC and UCUM licence notices; the code is MIT.",
   "license": "MIT",
   "author": "Massimiliano Polce",
   "type": "module",
@@ -40,11 +40,13 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "catalogs"
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && node scripts/bundle-catalogs.ts",
+    "prepack": "node scripts/bundle-catalogs.ts --check",
     "prepublishOnly": "pnpm build"
   },
   "publishConfig": {

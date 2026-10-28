@@ -8,7 +8,8 @@
  *      vendor/schxslt-1.10.1 and verifies its SHA-256;
  *   2. vendor/it-fse-catalogs/schematron/<name>.sch → vendor/schematron-sef/<name>.xsl
  *      (xslt3 -xsl:schxslt-1.10.1/2.0/pipeline-for-svrl.xsl);
- *   3. <name>.xsl → vendor/schematron-sef/<name>.sef.json (xslt3 -export -nogo).
+ *   3. <name>.xsl → vendor/schematron-sef/<name>.sef.json (xslt3 -export -nogo -relocate:on: a relocatable
+ *      SEF does not record the build folder in every base URI, since it is bundled in the npm package).
  *
  * `xslt3` (and `saxon-js`) are devDependencies of @massimiliano-dev/fse-validator only: they are under the
  * proprietary SaxonJS licence and are never bundled or shipped by this project. Everything lands in the
@@ -80,7 +81,7 @@ async function main(): Promise<void> {
     const xsl = join(out, `${name}.xsl`);
     const sef = join(out, `${name}.sef.json`);
     await run(xslt3, [`-xsl:${join(schxslt, '2.0', 'pipeline-for-svrl.xsl')}`, `-s:${sch}`, `-o:${xsl}`]);
-    await run(xslt3, [`-xsl:${xsl}`, `-export:${sef}`, '-nogo']);
+    await run(xslt3, [`-xsl:${xsl}`, `-export:${sef}`, '-nogo', '-relocate:on']);
     console.log(`${name}: ${sef}`);
   }
 }

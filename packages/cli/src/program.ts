@@ -32,7 +32,7 @@ function buildProgram(io: CliIo, setExit: (code: number) => void): Command {
     cmd
       .option(
         '--catalogs <dir>',
-        'it-fse-catalogs checkout (default $FSE_CATALOGS_DIR or ./vendor/it-fse-catalogs)',
+        'it-fse-catalogs checkout (default $FSE_CATALOGS_DIR, else the catalogs bundled in fse-validator)',
       )
       .option('--schema <file.xsd>', 'validate against a single self-contained XSD instead of the catalogs')
       .addOption(

@@ -1,5 +1,6 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { FseError, FseFileError, readRegularFile } from '@massimiliano-dev/fse-core';
 import { XsdValidator, type XsdSchemaSet, type XsdValidatorOptions } from './xsd.js';
 
@@ -19,6 +20,23 @@ export const FSE_CATALOGS_COMMIT = 'd8c766a653f457f2ee8f28f95fbe151be3f20788';
 export const CATALOGS_COMMIT_MARKER = '.fse-catalogs-commit';
 
 /**
+ * Folder of the it-fse-catalogs files bundled in this package (`schema/`, `schematron/`, licence notices
+ * and the commit marker, copied by `scripts/bundle-catalogs.ts` at build time). Resolved from this module,
+ * so it works from `dist/` in the installed package and from `src/` in the repository.
+ */
+export function bundledCatalogsDir(): string {
+  return fileURLToPath(new URL('../catalogs/it-fse-catalogs', import.meta.url));
+}
+
+/**
+ * Folder of the SaxonJS SEF files compiled from the bundled schematrons
+ * (`schematronFSE_LAB_v27.1.sef.json`), for `SaxonSchematronValidator`.
+ */
+export function bundledSchematronSefDir(): string {
+  return fileURLToPath(new URL('../catalogs/schematron-sef', import.meta.url));
+}
+
+/**
  * CDA schema variants shipped in it-fse-catalogs `schema/`. `POCD_MT000040UV02` is the one referenced by
  * the `typeId` of the official examples (it-fse-support `doc/esempi/CDA`).
  * TODO(verify): which variant the gateway applies to each document type.
@@ -33,7 +51,9 @@ export interface LoadedCdaSchema {
 }
 
 /**
- * Loads the CDA2 XSD from a local it-fse-catalogs checkout made by `pnpm sync:catalogs`.
+ * Loads the CDA2 XSD from the catalogs bundled in this package or, if `catalogsDir` is given, from an
+ * it-fse-catalogs checkout made by `pnpm sync:catalogs`. Both carry the commit marker, checked against
+ * {@link FSE_CATALOGS_COMMIT}.
  *
  * `CDA.xsd` includes `./coreschemas/<variant>.xsd`, but in it-fse-catalogs all files are in the same
  * folder, so the other files are mounted under `coreschemas/` in xmllint's virtual file system.
@@ -42,7 +62,7 @@ export interface LoadedCdaSchema {
  * (unless `allowOtherCommit` is set).
  */
 export async function loadFseCdaSchema(
-  catalogsDir: string,
+  catalogsDir: string = bundledCatalogsDir(),
   options: { variant?: FseCdaSchemaVariant; allowOtherCommit?: boolean } = {},
 ): Promise<LoadedCdaSchema> {
   const variant = options.variant ?? 'POCD_MT000040UV02';
@@ -55,7 +75,9 @@ export async function loadFseCdaSchema(
       .trim();
   } catch {
     throw new FseError(
-      `No it-fse-catalogs checkout found in ${catalogsDir}. Run "pnpm sync:catalogs" or set the catalogs folder.`,
+      catalogsDir === bundledCatalogsDir()
+        ? `This build of @massimiliano-dev/fse-validator has no bundled catalogs (${catalogsDir}). In the repository run "pnpm sync:catalogs && pnpm compile:schematron && pnpm build", or pass an it-fse-catalogs folder.`
+        : `No it-fse-catalogs checkout found in ${catalogsDir}. Run "pnpm sync:catalogs" or set the catalogs folder.`,
     );
   }
   if (!/^[0-9a-f]{40}$/.test(commit)) throw new FseError('Invalid catalogs commit marker');
@@ -91,9 +113,12 @@ export async function loadFseCdaSchema(
   return { schema: { entry, includes }, commit, variant };
 }
 
-/** Convenience: an {@link XsdValidator} for the CDA2 schema of a local it-fse-catalogs checkout. */
+/**
+ * Convenience: an {@link XsdValidator} for the CDA2 schema of the bundled catalogs, or of the
+ * it-fse-catalogs checkout in `catalogsDir` (pass `undefined` to use the bundled ones with options).
+ */
 export async function createFseXsdValidator(
-  catalogsDir: string,
+  catalogsDir?: string,
   options: XsdValidatorOptions & { variant?: FseCdaSchemaVariant } = {},
 ): Promise<XsdValidator> {
   const { variant, ...validatorOptions } = options;

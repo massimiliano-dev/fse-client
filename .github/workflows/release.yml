@@ -25,6 +25,9 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
+      # The validator package bundles the official catalogs: without them its `prepack` fails the publish.
+      - run: pnpm sync:catalogs
+      - run: pnpm compile:schematron
       - run: pnpm build
       - uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:

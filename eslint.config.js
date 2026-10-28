@@ -3,7 +3,15 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', 'vendor/**'] },
+  {
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/coverage/**',
+      'vendor/**',
+      'packages/validator/catalogs/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

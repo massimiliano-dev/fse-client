@@ -9,6 +9,8 @@ export type {
 export { XsdValidator, type XsdSchemaSet, type XsdValidatorOptions } from './xsd.js';
 export type { XmlFile } from './xmllint.js';
 export {
+  bundledCatalogsDir,
+  bundledSchematronSefDir,
   CATALOGS_COMMIT_MARKER,
   createFseXsdValidator,
   FSE_CATALOGS_COMMIT,

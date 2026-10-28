@@ -23,6 +23,8 @@ certs/
 
 # Downloaded official catalogs (pnpm sync:catalogs). Never committed.
 vendor/
+# Copy of the catalogs bundled in the validator package at build time (scripts/bundle-catalogs.ts).
+packages/validator/catalogs/
 
 # Real documents and patient data must never enter the repository.
 data/

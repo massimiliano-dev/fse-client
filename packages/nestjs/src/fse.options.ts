@@ -2,9 +2,12 @@ import type { InjectionToken, ModuleMetadata, OptionalFactoryDependency } from '
 import type { FseGatewayClientOptions } from '@massimiliano-dev/fse-gateway-client';
 import type { CdaValidator, FseCdaSchemaVariant } from '@massimiliano-dev/fse-validator';
 
-/** Builds the XSD validator from a local it-fse-catalogs checkout (`pnpm sync:catalogs`). */
+/**
+ * Builds the XSD validator from the catalogs bundled in fse-validator or, with `catalogsDir`, from a local
+ * it-fse-catalogs checkout (`pnpm sync:catalogs`).
+ */
 export interface FseCatalogsValidatorOptions {
-  catalogsDir: string;
+  catalogsDir?: string;
   variant?: FseCdaSchemaVariant;
   maxInputBytes?: number;
 }
@@ -12,7 +15,7 @@ export interface FseCatalogsValidatorOptions {
 /** Options of {@link FseModule}. Load certificates and keys from a secret store in `useFactory`. */
 export interface FseModuleOptions {
   gateway: FseGatewayClientOptions;
-  /** A validator instance, or the catalogs folder to build the default XSD validator. */
+  /** A validator instance, or the options of the default XSD validator (`{}`: bundled catalogs). */
   validator: CdaValidator | FseCatalogsValidatorOptions;
 }
 
