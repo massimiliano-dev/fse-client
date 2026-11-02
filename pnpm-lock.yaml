@@ -124,8 +124,8 @@ importers:
         specifier: ~3.3.0
         version: 3.3.0(pdf-lib@1.17.1)
       '@signpdf/signpdf':
-        specifier: ~3.3.0
-        version: 3.3.0
+        specifier: ~4.0.0
+        version: 4.0.0
       '@signpdf/utils':
         specifier: ~3.3.0
         version: 3.3.0
@@ -486,13 +486,17 @@ packages:
     peerDependencies:
       pdf-lib: ^1.17.1
 
-  '@signpdf/signpdf@3.3.0':
-    resolution: {integrity: sha512-/vy3dPTsTbLHdsKRarPQw8++UqN8GXxjEVnl4ZRl+o/zMWFqVb861RM5bxoRMGGMuPSvb1Rgt2lmVobEc0YUpw==}
-    engines: {node: '>=12'}
+  '@signpdf/signpdf@4.0.0':
+    resolution: {integrity: sha512-jvNFqZ0zEJX6OxRoLrgjl31DOrnG9k7QbYvGyvwTl542WGZUx1iKqGVqqXF9VsqTrUi5iz+JIwYL26ZPMwl6Xg==}
+    engines: {node: '>=22'}
 
   '@signpdf/utils@3.3.0':
     resolution: {integrity: sha512-ArOP0MIhCfdChh1oZkog81TPeSY2e5TvHQmXJ682T4+SKb6Z609uAZhqMQZ9xm+YenEf/eNMSE5KVwU+EudXug==}
     engines: {node: '>=12', yarn: '>=1.22.18'}
+
+  '@signpdf/utils@4.0.0':
+    resolution: {integrity: sha512-4uiNqyHTVnXGYK+zhwLKrsykX3d4f0mlbzykyI0BGiNVIZssHo61KmwWzUEbAcE//TpheUd2xD7yA8mjxIpaZg==}
+    engines: {node: '>=22', yarn: '>=1.22.18'}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -1639,11 +1643,13 @@ snapshots:
       '@signpdf/utils': 3.3.0
       pdf-lib: 1.17.1
 
-  '@signpdf/signpdf@3.3.0':
+  '@signpdf/signpdf@4.0.0':
     dependencies:
-      '@signpdf/utils': 3.3.0
+      '@signpdf/utils': 4.0.0
 
   '@signpdf/utils@3.3.0': {}
+
+  '@signpdf/utils@4.0.0': {}
 
   '@standard-schema/spec@1.1.0': {}
 
