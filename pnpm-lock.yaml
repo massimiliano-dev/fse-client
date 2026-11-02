@@ -127,8 +127,8 @@ importers:
         specifier: ~3.3.0
         version: 3.3.0
       '@signpdf/utils':
-        specifier: ~3.3.0
-        version: 3.3.0
+        specifier: ~4.0.0
+        version: 4.0.0
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
@@ -493,6 +493,10 @@ packages:
   '@signpdf/utils@3.3.0':
     resolution: {integrity: sha512-ArOP0MIhCfdChh1oZkog81TPeSY2e5TvHQmXJ682T4+SKb6Z609uAZhqMQZ9xm+YenEf/eNMSE5KVwU+EudXug==}
     engines: {node: '>=12', yarn: '>=1.22.18'}
+
+  '@signpdf/utils@4.0.0':
+    resolution: {integrity: sha512-4uiNqyHTVnXGYK+zhwLKrsykX3d4f0mlbzykyI0BGiNVIZssHo61KmwWzUEbAcE//TpheUd2xD7yA8mjxIpaZg==}
+    engines: {node: '>=22', yarn: '>=1.22.18'}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -1644,6 +1648,8 @@ snapshots:
       '@signpdf/utils': 3.3.0
 
   '@signpdf/utils@3.3.0': {}
+
+  '@signpdf/utils@4.0.0': {}
 
   '@standard-schema/spec@1.1.0': {}
 
