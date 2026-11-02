@@ -54,7 +54,7 @@
   "dependencies": {
     "@massimiliano-dev/fse-core": "workspace:^",
     "@signpdf/placeholder-pdf-lib": "~3.3.0",
-    "@signpdf/signpdf": "~3.3.0",
+    "@signpdf/signpdf": "~4.0.0",
     "@signpdf/utils": "~3.3.0",
     "pdf-lib": "^1.17.1"
   },
