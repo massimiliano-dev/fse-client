@@ -121,8 +121,8 @@ importers:
         specifier: workspace:^
         version: link:../core
       '@signpdf/placeholder-pdf-lib':
-        specifier: ~3.3.0
-        version: 3.3.0(pdf-lib@1.17.1)
+        specifier: ~4.0.0
+        version: 4.0.0(pdf-lib@1.17.1)
       '@signpdf/signpdf':
         specifier: ~3.3.0
         version: 3.3.0
@@ -480,9 +480,9 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@signpdf/placeholder-pdf-lib@3.3.0':
-    resolution: {integrity: sha512-DT1s617z88NvvCmo+z8jaz7lNzy7b7/fwo/movJGukpfSkl4FaLNRXIHNBCTRCP9TUb6F/axK1JulES/jY7mLQ==}
-    engines: {node: '>=12', yarn: '>=1.22.18'}
+  '@signpdf/placeholder-pdf-lib@4.0.0':
+    resolution: {integrity: sha512-5EGTe4RVulLaxDi1ta2v42+M3rhy55LmgpSZUWTTspUpXAfhsjyhE+dUINXz6wYKtjDoY+Qz2yR9kD2xOPSTCw==}
+    engines: {node: '>=22', yarn: '>=1.22.18'}
     peerDependencies:
       pdf-lib: ^1.17.1
 
@@ -493,6 +493,10 @@ packages:
   '@signpdf/utils@3.3.0':
     resolution: {integrity: sha512-ArOP0MIhCfdChh1oZkog81TPeSY2e5TvHQmXJ682T4+SKb6Z609uAZhqMQZ9xm+YenEf/eNMSE5KVwU+EudXug==}
     engines: {node: '>=12', yarn: '>=1.22.18'}
+
+  '@signpdf/utils@4.0.0':
+    resolution: {integrity: sha512-4uiNqyHTVnXGYK+zhwLKrsykX3d4f0mlbzykyI0BGiNVIZssHo61KmwWzUEbAcE//TpheUd2xD7yA8mjxIpaZg==}
+    engines: {node: '>=22', yarn: '>=1.22.18'}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -1634,9 +1638,9 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@signpdf/placeholder-pdf-lib@3.3.0(pdf-lib@1.17.1)':
+  '@signpdf/placeholder-pdf-lib@4.0.0(pdf-lib@1.17.1)':
     dependencies:
-      '@signpdf/utils': 3.3.0
+      '@signpdf/utils': 4.0.0
       pdf-lib: 1.17.1
 
   '@signpdf/signpdf@3.3.0':
@@ -1644,6 +1648,8 @@ snapshots:
       '@signpdf/utils': 3.3.0
 
   '@signpdf/utils@3.3.0': {}
+
+  '@signpdf/utils@4.0.0': {}
 
   '@standard-schema/spec@1.1.0': {}
 
